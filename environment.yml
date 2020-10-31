@@ -1,0 +1,13 @@
+name: velotafmap
+dependencies:
+  - python=3
+  - xmltodict
+  - numpy
+  - xarray
+  - matplotlib
+  - tqdm
+  - pandas
+  - cartopy
+  - pyepsg
+  - shapely
+  - scipy
