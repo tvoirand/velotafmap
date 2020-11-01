@@ -26,24 +26,43 @@ def velotafmap(input_dir):
         -input_dir  str
     """
 
-    # create some constants
+    # create rasterization parameters
     PIX_SIZE = 100
     PIX_DECIMALS = -2
-    START_DATE = datetime.datetime(year=2019, month=8, day=22)
-    DAYS = 1
 
-    # initiate bounds
+    # create time bounds
+    START_DATE = datetime.datetime(year=2019, month=8, day=22)
+    END_DATE = datetime.datetime(year=2020, month=3, day=13)
+    DAYS = (END_DATE - START_DATE).days
+
+    # create spatial bounds
     XMIN = 690000
     XMAX = 700000
     YMIN = 4958000
     YMAX = 4972000
 
-    # initiate velocity data array
+    # initiate dataset
     x_coords = range(XMIN, XMAX, PIX_SIZE)
     y_coords = range(YMIN, YMAX, PIX_SIZE)
     t_coords = [START_DATE + datetime.timedelta(days=d) for d in range(DAYS)]
-    vel_array = xr.DataArray(
-        data=None, coords=[x_coords, y_coords, t_coords], dims=["x", "y", "time"]
+    dataset = xr.Dataset(
+        data_vars={
+            "velocity": xr.DataArray(
+                data=np.nan,
+                coords=[x_coords, y_coords, t_coords],
+                dims=["x", "y", "time"],
+            ),
+            "occurences": xr.DataArray(
+                data=0,
+                coords=[x_coords, y_coords, t_coords],
+                dims=["x", "y", "time"],
+            ),
+        },
+        coords={
+            "x": x_coords,
+            "y": y_coords,
+            "time": t_coords,
+        },
     )
 
     # loop through available strava activities
