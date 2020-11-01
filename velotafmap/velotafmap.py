@@ -13,6 +13,8 @@ import numpy as np
 import xarray as xr
 import matplotlib.pyplot as plt
 from tqdm import tqdm
+import cartopy.crs as ccrs
+import cartopy.io.img_tiles as cimgt
 
 # local imports
 from utils import check_bike_commuting
@@ -72,7 +74,7 @@ def velotafmap(input_dir):
             os.path.join(input_dir, f)
             for f in os.listdir(input_dir)
             if os.path.splitext(f)[1] == ".gpx"
-        ][:2]
+        ][:1]
     ):
 
         if check_bike_commuting(
@@ -115,9 +117,27 @@ def velotafmap(input_dir):
             # increase this cell points count
             dataset.occurences.loc[x, y, t] += 1
 
-    # plot points
-    dataset.velocity.mean(dim="time").plot.imshow()
+    # create figure
+    fig = plt.figure(figsize=(8, 6), dpi=100)
 
+    # create geo axes
+    projection = ccrs.epsg(32630)
+    geo_axes = plt.subplot(projection=projection)
+
+    # add open street map background
+    osm_background = cimgt.OSM()
+    geo_axes.add_image(osm_background, 10)
+
+    # plot dataset
+    xr.plot.imshow(
+        darray=dataset.velocity.mean(dim="time"),
+        x="x",
+        y="y",
+        ax=geo_axes,
+        transform=projection,
+    )
+
+    # show plot
     plt.show()
 
 
