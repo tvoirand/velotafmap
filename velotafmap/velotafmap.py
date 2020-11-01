@@ -100,12 +100,12 @@ def velotafmap(input_dir):
                 year=index.year, month=index.month, day=index.day
             )  # time coord
 
-            if np.isnan(dataset.velocity.loc[x, y, t]): # this grid cell is empty
+            if np.isnan(dataset.velocity.loc[x, y, t]):  # this grid cell is empty
 
                 # directly assign value
                 dataset.velocity.loc[x, y, t] = point["vel"]
 
-            else: # this grid cell already has values
+            else:  # this grid cell already has values
 
                 # compute average velocity, taking this new point into account
                 dataset.velocity.loc[x, y, t] += (
@@ -116,9 +116,7 @@ def velotafmap(input_dir):
             dataset.occurences.loc[x, y, t] += 1
 
     # plot points
-    dataset.velocity.loc[
-        :, :, datetime.datetime(year=2019, month=8, day=22)
-    ].plot.imshow()
+    dataset.velocity.mean(dim="time").plot.imshow()
 
     plt.show()
 
