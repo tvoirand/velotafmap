@@ -52,7 +52,7 @@ def velotafmap(input_dir):
                 coords=[x_coords, y_coords, t_coords],
                 dims=["x", "y", "time"],
             ),
-            "occurences": xr.DataArray(
+            "occurences": xr.DataArray(  # will be used to count number of points for rasterization
                 data=0,
                 coords=[x_coords, y_coords, t_coords],
                 dims=["x", "y", "time"],
@@ -72,7 +72,7 @@ def velotafmap(input_dir):
             os.path.join(input_dir, f)
             for f in os.listdir(input_dir)
             if os.path.splitext(f)[1] == ".gpx"
-        ][:1]
+        ][:2]
     ):
 
         if check_bike_commuting(
@@ -90,15 +90,35 @@ def velotafmap(input_dir):
                 points,
             ) = read_gpx(input_file)
 
-        # store velocity data in xarray
-        array = xr.DataArray(np.nan, coords=[x_coords, y_coords], dims=["x", "y"])
+        # store velocity data in dataset
         for index, point in points.iterrows():  # loop through points
-            x = int(np.around(point["x"], decimals=PIX_DECIMALS))
-            y = int(np.around(point["y"], decimals=PIX_DECIMALS))
-            array.loc[x, y] = point["vel"]
+
+            # find grid cell of current point
+            x = int(np.around(point["x"], decimals=PIX_DECIMALS))  # x coord
+            y = int(np.around(point["y"], decimals=PIX_DECIMALS))  # y coord
+            t = datetime.datetime(
+                year=index.year, month=index.month, day=index.day
+            )  # time coord
+
+            if np.isnan(dataset.velocity.loc[x, y, t]): # this grid cell is empty
+
+                # directly assign value
+                dataset.velocity.loc[x, y, t] = point["vel"]
+
+            else: # this grid cell already has values
+
+                # compute average velocity, taking this new point into account
+                dataset.velocity.loc[x, y, t] += (
+                    point["vel"] - dataset.velocity.loc[x, y, t]
+                ) / (dataset.occurences.loc[x, y, t] + 1)
+
+            # increase this cell points count
+            dataset.occurences.loc[x, y, t] += 1
 
     # plot points
-    array.plot.imshow()
+    dataset.velocity.loc[
+        :, :, datetime.datetime(year=2019, month=8, day=22)
+    ].plot.imshow()
 
     plt.show()
 
