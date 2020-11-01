@@ -56,17 +56,6 @@ def check_bike_commuting(input_file):
     return True
 
 
-def read_gpx_metadata(input_file):
-    """
-    Read metadata from GPX files.
-    Input:
-        -input_file     str
-    Output:
-    """
-
-    return activity_date, activity_name, xmin, xmax, ymin, ymax
-
-
 def read_gpx(input_file):
     """
     Read GPX files.
