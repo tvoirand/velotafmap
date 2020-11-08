@@ -135,6 +135,7 @@ def velotafmap(input_dir):
         y="y",
         ax=geo_axes,
         transform=projection,
+        zorder=10
     )
 
     # show plot
