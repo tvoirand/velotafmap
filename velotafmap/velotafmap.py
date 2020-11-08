@@ -75,7 +75,7 @@ def velotafmap(input_dir, output_dir):
             os.path.join(input_dir, f)
             for f in os.listdir(input_dir)
             if os.path.splitext(f)[1] == ".gpx"
-        ][:2]
+        ]
     ):
 
         if check_bike_commuting(
@@ -132,7 +132,7 @@ def velotafmap(input_dir, output_dir):
     )
 
     # create animation of velocity over time
-    for date in tqdm(t_coords[:2]): # loop through dates
+    for date in tqdm(t_coords): # loop through dates
 
         # create image for this date
         create_map(
