@@ -3,16 +3,20 @@ Utils module for velotafmap.
 """
 
 # standard imports
-import argparse
+import os
 import datetime
 
 # third party imports
 import xmltodict
 import numpy as np
 import pandas as pd
+import xarray as xr
 from scipy import signal
 from numpy.linalg import norm
 import cartopy.crs as ccrs
+import cartopy.io.img_tiles as cimgt
+import matplotlib.pyplot as plt
+import cv2
 
 
 def check_bike_commuting(input_file):
@@ -160,3 +164,76 @@ def read_gpx(input_file):
     points_df["y"] = projected_coords[:, 1]
 
     return activity_date, activity_name, xmin, xmax, ymin, ymax, points_df
+
+
+def create_map(array, output_file, projection):
+    """
+    Create map with cartopy based on input xarray DataArray.
+    The DataArray must have "x" and a "y" dimensions.
+    Input:
+        -array          xarray DataArray instance
+        -output_file    str
+        -projection     cartopy.crs.Projection instance
+    """
+
+    # create figure
+    fig = plt.figure(figsize=(8, 6), dpi=100)
+
+    # create geo axes
+    geo_axes = plt.subplot(projection=projection)
+
+    # add open street map background
+    osm_background = cimgt.OSM()
+    geo_axes.add_image(osm_background, 14)
+
+    # plot dataset
+    xr.plot.imshow(
+        darray=array,
+        x="x",
+        y="y",
+        ax=geo_axes,
+        transform=projection,
+        zorder=10,
+        vmin=15,
+        vmax=30,
+        extend="neither",
+    )
+
+    # save as image
+    plt.savefig(output_file)
+
+    # close figure
+    plt.close()
+
+
+def create_video(video_name, input_dir):
+    """
+    Create video with opencv based on png images stored in input dir.
+    Input:
+        -video_name     str
+        -input_dir      str
+    """
+
+    # set FourCC video codec code
+    fourcc = cv2.VideoWriter_fourcc(*"XVID")
+
+    # set FPS
+    fps = 16
+
+    # get input images list
+    images = [img for img in os.listdir(input_dir) if img.endswith(".png")]
+
+    # read frame shape
+    frame = cv2.imread(os.path.join(input_dir, images[0]))
+    height, width, layers = frame.shape
+
+    # create video writer object
+    video = cv2.VideoWriter(video_name, fourcc, fps, (width, height))
+
+    # write video using input images
+    for image in images:
+        video.write(cv2.imread(os.path.join(input_dir, image)))
+
+    # close video writer and windows once finished
+    cv2.destroyAllWindows()
+    video.release()

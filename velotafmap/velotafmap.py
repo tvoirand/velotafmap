@@ -8,18 +8,16 @@ import argparse
 import datetime
 
 # third party imports
-import xmltodict
 import numpy as np
 import xarray as xr
-import matplotlib.pyplot as plt
-from tqdm import tqdm
 import cartopy.crs as ccrs
-import cartopy.io.img_tiles as cimgt
-import cv2
+from tqdm import tqdm
 
 # local imports
 from utils import check_bike_commuting
 from utils import read_gpx
+from utils import create_map
+from utils import create_video
 
 
 def velotafmap(input_dir, output_dir):
@@ -40,6 +38,7 @@ def velotafmap(input_dir, output_dir):
     DAYS = (END_DATE - START_DATE).days
 
     # create spatial bounds
+    PROJECTION = ccrs.epsg(32630)
     XMIN = 690000
     XMAX = 700000
     YMIN = 4958000
@@ -69,14 +68,14 @@ def velotafmap(input_dir, output_dir):
         },
     )
 
-    # loop through available strava activities
+    # loop through available strava activities to fill dataset
     input_files = []
     for input_file in tqdm(
         [
             os.path.join(input_dir, f)
             for f in os.listdir(input_dir)
             if os.path.splitext(f)[1] == ".gpx"
-        ]
+        ][:2]
     ):
 
         if check_bike_commuting(
@@ -125,78 +124,29 @@ def velotafmap(input_dir, output_dir):
     if not os.path.exists(os.path.join(output_dir, "images")):
         os.makedirs(os.path.join(output_dir, "images"))
 
-    # create figure
-    fig = plt.figure(figsize=(8, 6), dpi=100)
-
-    # create geo axes
-    projection = ccrs.epsg(32630)
-    geo_axes = plt.subplot(projection=projection)
-
-    # add open street map background
-    osm_background = cimgt.OSM()
-    geo_axes.add_image(osm_background, 14)
-
-    # plot dataset
-    xr.plot.imshow(
-        darray=dataset.velocity.mean(dim="time"),
-        x="x",
-        y="y",
-        ax=geo_axes,
-        transform=projection,
-        zorder=10,
-        vmin=15,
-        vmax=30,
-        extend="neither",
+    # create map of average velocity over whole timeframe
+    create_map(
+        dataset.velocity.mean(dim="time"),
+        os.path.join(output_dir, "average.png"),
+        PROJECTION
     )
 
-    # save as image
-    plt.savefig(os.path.join(output_dir, "average.png"))
+    # create animation of velocity over time
+    for date in tqdm(t_coords[:2]): # loop through dates
 
-    # loop through dates
-    for date in tqdm(t_coords):
-
-        # create figure
-        fig = plt.figure(figsize=(8, 6), dpi=100)
-
-        # create geo axes
-        projection = ccrs.epsg(32630)
-        geo_axes = plt.subplot(projection=projection)
-
-        # add open street map background
-        osm_background = cimgt.OSM()
-        geo_axes.add_image(osm_background, 14)
-
-        # plot dataset
-        xr.plot.imshow(
-            darray=dataset.velocity.loc[:, :, date],
-            x="x",
-            y="y",
-            ax=geo_axes,
-            transform=projection,
-            zorder=10,
-            vmin=15,
-            vmax=30,
-            extend="neither",
+        # create image for this date
+        create_map(
+            dataset.velocity.loc[:, :, date],
+            os.path.join(output_dir, "images", "{}.png".format(date.strftime("%Y%m%d"))),
+            PROJECTION
         )
 
-        # save as image
-        plt.savefig(os.path.join(output_dir, "images", "{}.png".format(date.strftime("%Y%m%d"))))
+    # create video file from images of whole timeframe
+    create_video(
+        os.path.join(output_dir, "video.avi"),
+        os.path.join(output_dir, "images"),
+    )
 
-        # close figure
-        plt.close()
-
-    # create video
-    video_name = os.path.join(output_dir, "video.avi")
-    fourcc = cv2.VideoWriter_fourcc(*"XVID")
-    fps = 4#16
-    images = [img for img in os.listdir(os.path.join(output_dir, "images")) if img.endswith(".png")]
-    frame = cv2.imread(os.path.join(os.path.join(output_dir, "images"), images[0]))
-    height, width, layers = frame.shape
-    video = cv2.VideoWriter(video_name, fourcc, fps, (width,height))
-    for image in images:
-        video.write(cv2.imread(os.path.join(os.path.join(output_dir, "images"), image)))
-    cv2.destroyAllWindows()
-    video.release()
 
 
 if __name__ == "__main__":
