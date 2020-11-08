@@ -15,17 +15,19 @@ import matplotlib.pyplot as plt
 from tqdm import tqdm
 import cartopy.crs as ccrs
 import cartopy.io.img_tiles as cimgt
+import cv2
 
 # local imports
 from utils import check_bike_commuting
 from utils import read_gpx
 
 
-def velotafmap(input_dir):
+def velotafmap(input_dir, output_dir):
     """
-    Create map of average bike commuting performance over time.
+    Map bike commuting performance over time.
     Input:
-        -input_dir  str
+        -input_dir      str
+        -output_dir     str
     """
 
     # create rasterization parameters
@@ -74,7 +76,7 @@ def velotafmap(input_dir):
             os.path.join(input_dir, f)
             for f in os.listdir(input_dir)
             if os.path.splitext(f)[1] == ".gpx"
-        ][:1]
+        ]
     ):
 
         if check_bike_commuting(
@@ -117,6 +119,12 @@ def velotafmap(input_dir):
             # increase this cell points count
             dataset.occurences.loc[x, y, t] += 1
 
+    # create output dir
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+    if not os.path.exists(os.path.join(output_dir, "images")):
+        os.makedirs(os.path.join(output_dir, "images"))
+
     # create figure
     fig = plt.figure(figsize=(8, 6), dpi=100)
 
@@ -126,7 +134,7 @@ def velotafmap(input_dir):
 
     # add open street map background
     osm_background = cimgt.OSM()
-    geo_axes.add_image(osm_background, 10)
+    geo_axes.add_image(osm_background, 14)
 
     # plot dataset
     xr.plot.imshow(
@@ -135,29 +143,60 @@ def velotafmap(input_dir):
         y="y",
         ax=geo_axes,
         transform=projection,
-        zorder=10
+        zorder=10,
+        vmin=15,
+        vmax=30,
+        extend="neither",
     )
 
-    # show plot
-    plt.show()
+    # save as image
+    plt.savefig(os.path.join(output_dir, "average.png"))
 
+    # loop through dates
+    for date in tqdm(t_coords):
 
-# compute average performance
+        # create figure
+        fig = plt.figure(figsize=(8, 6), dpi=100)
 
-# create map file
+        # create geo axes
+        projection = ccrs.epsg(32630)
+        geo_axes = plt.subplot(projection=projection)
 
+        # add open street map background
+        osm_background = cimgt.OSM()
+        geo_axes.add_image(osm_background, 14)
 
-# create animation of bike commuting performance over time
+        # plot dataset
+        xr.plot.imshow(
+            darray=dataset.velocity.loc[:, :, date],
+            x="x",
+            y="y",
+            ax=geo_axes,
+            transform=projection,
+            zorder=10,
+            vmin=15,
+            vmax=30,
+            extend="neither",
+        )
 
-# loop through available strava activities
+        # save as image
+        plt.savefig(os.path.join(output_dir, "images", "{}.png".format(date.strftime("%Y%m%d"))))
 
-# filter activities that are not bike commuting
+        # close figure
+        plt.close()
 
-# store velocity data in a raster ?
-
-# create map file
-
-# create video file
+    # create video
+    video_name = os.path.join(output_dir, "video.avi")
+    fourcc = cv2.VideoWriter_fourcc(*"XVID")
+    fps = 4#16
+    images = [img for img in os.listdir(os.path.join(output_dir, "images")) if img.endswith(".png")]
+    frame = cv2.imread(os.path.join(os.path.join(output_dir, "images"), images[0]))
+    height, width, layers = frame.shape
+    video = cv2.VideoWriter(video_name, fourcc, fps, (width,height))
+    for image in images:
+        video.write(cv2.imread(os.path.join(os.path.join(output_dir, "images"), image)))
+    cv2.destroyAllWindows()
+    video.release()
 
 
 if __name__ == "__main__":
@@ -168,6 +207,11 @@ if __name__ == "__main__":
         "-indir",
         help="Dir where all strava activities to map are stored",
     )
+    parser.add_argument(
+        "--output_dir",
+        "-outdir",
+        help="Dir where video and images will be stored"
+    )
     args = parser.parse_args()
 
-    velotafmap(args.input_dir)
+    velotafmap(args.input_dir, args.output_dir)
