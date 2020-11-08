@@ -46,7 +46,7 @@ def velotafmap(input_dir):
     # initiate dataset
     x_coords = range(XMIN, XMAX, PIX_SIZE)
     y_coords = range(YMIN, YMAX, PIX_SIZE)
-    t_coords = [START_DATE + datetime.timedelta(days=d) for d in range(DAYS)]
+    t_coords = [START_DATE + datetime.timedelta(days=d) for d in range(DAYS+1)]
     dataset = xr.Dataset(
         data_vars={
             "velocity": xr.DataArray(
