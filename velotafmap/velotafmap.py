@@ -47,7 +47,7 @@ def velotafmap(input_dir, output_dir):
     # initiate dataset
     x_coords = range(XMIN, XMAX, PIX_SIZE)
     y_coords = range(YMIN, YMAX, PIX_SIZE)
-    t_coords = [START_DATE + datetime.timedelta(days=d) for d in range(DAYS+1)]
+    t_coords = [START_DATE + datetime.timedelta(days=d) for d in range(DAYS + 1)]
     dataset = xr.Dataset(
         data_vars={
             "velocity": xr.DataArray(
@@ -128,17 +128,19 @@ def velotafmap(input_dir, output_dir):
     create_map(
         dataset.velocity.mean(dim="time"),
         os.path.join(output_dir, "average.png"),
-        PROJECTION
+        PROJECTION,
     )
 
     # create animation of velocity over time
-    for date in tqdm(t_coords): # loop through dates
+    for date in tqdm(t_coords):  # loop through dates
 
         # create image for this date
         create_map(
             dataset.velocity.loc[:, :, date],
-            os.path.join(output_dir, "images", "{}.png".format(date.strftime("%Y%m%d"))),
-            PROJECTION
+            os.path.join(
+                output_dir, "images", "{}.png".format(date.strftime("%Y%m%d"))
+            ),
+            PROJECTION,
         )
 
     # create video file from images of whole timeframe
@@ -146,7 +148,6 @@ def velotafmap(input_dir, output_dir):
         os.path.join(output_dir, "video.avi"),
         os.path.join(output_dir, "images"),
     )
-
 
 
 if __name__ == "__main__":
@@ -158,9 +159,7 @@ if __name__ == "__main__":
         help="Dir where all strava activities to map are stored",
     )
     parser.add_argument(
-        "--output_dir",
-        "-outdir",
-        help="Dir where video and images will be stored"
+        "--output_dir", "-outdir", help="Dir where video and images will be stored"
     )
     args = parser.parse_args()
 
