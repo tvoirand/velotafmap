@@ -1,4 +1,6 @@
 name: velotafmap
+channels:
+  - conda-forge
 dependencies:
   - python=3
   - xmltodict
@@ -8,6 +10,7 @@ dependencies:
   - tqdm
   - pandas
   - cartopy
+  - scipy
+  - opencv
   - pyepsg
   - shapely
-  - scipy
