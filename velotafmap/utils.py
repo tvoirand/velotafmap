@@ -185,7 +185,7 @@ def create_map(array, output_file, projection):
 
     # add open street map background
     osm_background = cimgt.OSM()
-    geo_axes.add_image(osm_background, 14)
+    geo_axes.add_image(osm_background, 13)
 
     # plot dataset
     xr.plot.imshow(
@@ -195,8 +195,8 @@ def create_map(array, output_file, projection):
         ax=geo_axes,
         transform=projection,
         zorder=10,
-        vmin=15,
-        vmax=30,
+        vmin=20,
+        vmax=28,
         extend="neither",
     )
 
@@ -207,19 +207,17 @@ def create_map(array, output_file, projection):
     plt.close()
 
 
-def create_video(video_name, input_dir):
+def create_video(video_name, input_dir, fps=16):
     """
     Create video with opencv based on png images stored in input dir.
     Input:
         -video_name     str
         -input_dir      str
+        -fps            int
     """
 
     # set FourCC video codec code
     fourcc = cv2.VideoWriter_fourcc(*"XVID")
-
-    # set FPS
-    fps = 8
 
     # get input images list
     images = [img for img in os.listdir(input_dir) if img.endswith(".png")]

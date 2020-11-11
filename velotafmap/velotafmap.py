@@ -6,6 +6,8 @@ Main script of Velotafmap.
 import os
 import argparse
 import datetime
+import configparser
+import shutil
 
 # third party imports
 import numpy as np
@@ -30,21 +32,51 @@ def velotafmap(input_dir, output_dir):
         -output_dir     str
     """
 
-    # create rasterization parameters
-    PIX_SIZE = 100
-    PIX_DECIMALS = -2
+    # read config
+    config = configparser.ConfigParser()
+    config_file = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.realpath(__file__))),
+        "config",
+        "config.ini",
+    )
+    config.read(config_file)
 
-    # create time bounds
-    START_DATE = datetime.datetime(year=2019, month=8, day=22)
-    END_DATE = datetime.datetime(year=2020, month=3, day=13)
+    # rasterization parameters
+    PIX_SIZE = int(config["velotafmap"]["pix_size"])
+    PIX_DECIMALS = int(config["velotafmap"]["pix_decimals"])
+
+    # time bounds
+    START_DATE = datetime.datetime.strptime(
+        config["velotafmap"]["start_date"], "%Y%m%d"
+    )
+    END_DATE = datetime.datetime.strptime(config["velotafmap"]["end_date"], "%Y%m%d")
     DAYS = (END_DATE - START_DATE).days
 
-    # create spatial bounds
-    PROJECTION = ccrs.epsg(32630)
-    XMIN = 690000
-    XMAX = 700000
-    YMIN = 4958000
-    YMAX = 4972000
+    # spatial bounds
+    PROJECTION = ccrs.epsg(int(config["velotafmap"]["projection_epsg"]))
+    XMIN, XMAX, YMIN, YMAX = [
+        int(value) for value in config["velotafmap"]["spatial_bounds"].split(",")
+    ]
+
+    # filters parameters
+    SIGMA_TIME_FILTER = float(config["velotafmap"]["sigma_time_filter"])
+    SIGMA_SPATIAL_FILTER = float(config["velotafmap"]["sigma_spatial_filter"])
+
+    # video and maps parameters
+    VIDEO_FPS = int(config["velotafmap"]["video_fps"])
+
+    # create output dir
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+    if not os.path.exists(os.path.join(output_dir, "images")):
+        os.makedirs(os.path.join(output_dir, "images"))
+
+    # write info file
+    info_file = os.path.join(output_dir, "info.txt")
+    shutil.copy(config_file, info_file)
+
+    # store processing start time
+    processing_start_time = datetime.datetime.now()
 
     # initiate dataset
     x_coords = range(XMIN, XMAX, PIX_SIZE)
@@ -120,22 +152,18 @@ def velotafmap(input_dir, output_dir):
             # increase this cell points count
             dataset.occurences.loc[x, y, t] += 1
 
-    # create output dir
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
-    if not os.path.exists(os.path.join(output_dir, "images")):
-        os.makedirs(os.path.join(output_dir, "images"))
-
     # apply 1D filter to velocity over time
-    dataset.velocity[:, :, :] = nan_filter_1d(
-        np.asarray(dataset.velocity[:, :, :]), sigma=1.5, axis=2
-    )
+    if SIGMA_TIME_FILTER != 0.0:
+        dataset.velocity[:, :, :] = nan_filter_1d(
+            np.asarray(dataset.velocity[:, :, :]), sigma=SIGMA_TIME_FILTER, axis=2
+        )
 
-    # # apply 2D filter to velocity for each date
-    # for date in t_coords:
-    #     dataset.velocity.loc[:, :, date] = nan_filter(
-    #         np.asarray(dataset.velocity.loc[:, :, date]), sigma=0.15
-    #     )
+    # apply 2D filter to velocity for each date
+    if SIGMA_SPATIAL_FILTER != 0.0:
+        for date in t_coords:
+            dataset.velocity.loc[:, :, date] = nan_filter(
+                np.asarray(dataset.velocity.loc[:, :, date]), sigma=SIGMA_SPATIAL_FILTER
+            )
 
     # create map of average velocity over whole timeframe
     create_map(
@@ -160,7 +188,16 @@ def velotafmap(input_dir, output_dir):
     create_video(
         os.path.join(output_dir, "video.avi"),
         os.path.join(output_dir, "images"),
+        VIDEO_FPS,
     )
+
+    # store processing duration
+    with open(info_file, "a") as outfile:
+        outfile.write(
+            "\nProcessing time: {}".format(
+                datetime.datetime.now() - processing_start_time
+            )
+        )
 
 
 if __name__ == "__main__":
