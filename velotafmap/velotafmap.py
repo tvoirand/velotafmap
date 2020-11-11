@@ -18,6 +18,7 @@ from utils import check_bike_commuting
 from utils import read_gpx
 from utils import create_map
 from utils import create_video
+from utils import nan_filter
 
 
 def velotafmap(input_dir, output_dir):
@@ -124,6 +125,11 @@ def velotafmap(input_dir, output_dir):
     if not os.path.exists(os.path.join(output_dir, "images")):
         os.makedirs(os.path.join(output_dir, "images"))
 
+    # apply 1D filter to velocity over time
+    dataset.velocity[:, :, :] = nan_filter(
+        np.asarray(dataset.velocity[:, :, :]), sigma=2.5, axis=2
+    )
+
     # create map of average velocity over whole timeframe
     create_map(
         dataset.velocity.mean(dim="time"),
@@ -158,13 +164,13 @@ if __name__ == "__main__":
         "--input_dir",
         "-indir",
         help="Dir where all strava activities to map are stored",
-        required=True
+        required=True,
     )
     required_arguments.add_argument(
         "--output_dir",
         "-outdir",
         help="Dir where video and images will be stored",
-        required=True
+        required=True,
     )
     args = parser.parse_args()
 

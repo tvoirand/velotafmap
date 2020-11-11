@@ -12,6 +12,7 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 from scipy import signal
+from scipy import ndimage
 from numpy.linalg import norm
 import cartopy.crs as ccrs
 import cartopy.io.img_tiles as cimgt
@@ -237,3 +238,32 @@ def create_video(video_name, input_dir):
     # close video writer and windows once finished
     cv2.destroyAllWindows()
     video.release()
+
+
+def nan_filter(array, sigma=1.0, axis=0):
+    """
+    Apply 1d gaussian filter to 3d array containing nans.
+    Based on the following stackoverflow answer by user David:
+    https://stackoverflow.com/questions/18697532/gaussian-filtering-a-image-with-nan-in-python
+    Input:
+        -array              np.array
+        -sigma              float
+        -axis               int
+    Output:
+        -                   np.array
+    """
+
+    # create copy of input array with nans replaced by zeros
+    V = array.copy()
+    V[np.isnan(array)] = 0
+
+    # create arrays of ones, with zeros indicating positions of nans
+    W = np.ones(array.shape)
+    W[np.isnan(array)] = 0
+
+    # apply 1d filter
+    VV = ndimage.gaussian_filter1d(V, sigma=sigma, axis=axis)
+    WW = ndimage.gaussian_filter1d(W, sigma=sigma, axis=axis)
+
+    # returned combined two filtered arrays
+    return VV / WW
