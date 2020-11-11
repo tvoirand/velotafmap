@@ -178,7 +178,7 @@ def create_map(array, output_file, projection):
     """
 
     # create figure
-    fig = plt.figure(figsize=(8, 6), dpi=100)
+    fig = plt.figure(figsize=(16, 12), dpi=300)
 
     # create geo axes
     geo_axes = plt.subplot(projection=projection)
@@ -219,7 +219,7 @@ def create_video(video_name, input_dir):
     fourcc = cv2.VideoWriter_fourcc(*"XVID")
 
     # set FPS
-    fps = 16
+    fps = 8
 
     # get input images list
     images = [img for img in os.listdir(input_dir) if img.endswith(".png")]

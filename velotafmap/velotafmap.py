@@ -128,14 +128,14 @@ def velotafmap(input_dir, output_dir):
 
     # apply 1D filter to velocity over time
     dataset.velocity[:, :, :] = nan_filter_1d(
-        np.asarray(dataset.velocity[:, :, :]), sigma=2.5, axis=2
+        np.asarray(dataset.velocity[:, :, :]), sigma=1.5, axis=2
     )
 
-    # apply 2D filter to velocity for each date
-    for date in t_coords:
-        dataset.velocity.loc[:, :, date] = nan_filter(
-            np.asarray(dataset.velocity.loc[:, :, date]), sigma=0.15
-        )
+    # # apply 2D filter to velocity for each date
+    # for date in t_coords:
+    #     dataset.velocity.loc[:, :, date] = nan_filter(
+    #         np.asarray(dataset.velocity.loc[:, :, date]), sigma=0.15
+    #     )
 
     # create map of average velocity over whole timeframe
     create_map(
