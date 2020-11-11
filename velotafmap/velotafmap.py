@@ -19,6 +19,7 @@ from utils import read_gpx
 from utils import create_map
 from utils import create_video
 from utils import nan_filter
+from utils import nan_filter_1d
 
 
 def velotafmap(input_dir, output_dir):
@@ -126,9 +127,15 @@ def velotafmap(input_dir, output_dir):
         os.makedirs(os.path.join(output_dir, "images"))
 
     # apply 1D filter to velocity over time
-    dataset.velocity[:, :, :] = nan_filter(
+    dataset.velocity[:, :, :] = nan_filter_1d(
         np.asarray(dataset.velocity[:, :, :]), sigma=2.5, axis=2
     )
+
+    # apply 2D filter to velocity for each date
+    for date in t_coords:
+        dataset.velocity.loc[:, :, date] = nan_filter(
+            np.asarray(dataset.velocity.loc[:, :, date]), sigma=0.15
+        )
 
     # create map of average velocity over whole timeframe
     create_map(
