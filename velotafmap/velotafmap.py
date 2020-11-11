@@ -153,13 +153,18 @@ def velotafmap(input_dir, output_dir):
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
-    parser.add_argument(
+    required_arguments = parser.add_argument_group("required arguments")
+    required_arguments.add_argument(
         "--input_dir",
         "-indir",
         help="Dir where all strava activities to map are stored",
+        required=True
     )
-    parser.add_argument(
-        "--output_dir", "-outdir", help="Dir where video and images will be stored"
+    required_arguments.add_argument(
+        "--output_dir",
+        "-outdir",
+        help="Dir where video and images will be stored",
+        required=True
     )
     args = parser.parse_args()
 
