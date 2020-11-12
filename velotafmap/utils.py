@@ -188,7 +188,7 @@ def create_map(array, output_file, projection):
     geo_axes.add_image(osm_background, 13)
 
     # plot dataset
-    xr.plot.imshow(
+    image = xr.plot.imshow(
         darray=array,
         x="x",
         y="y",
@@ -198,7 +198,12 @@ def create_map(array, output_file, projection):
         vmin=20,
         vmax=28,
         extend="neither",
+        add_colorbar=False
     )
+
+    # add colorbar and label
+    colorbar = plt.colorbar(mappable=image)
+    colorbar.set_label("Velocity (km/h)")
 
     # save as image
     plt.savefig(output_file)
