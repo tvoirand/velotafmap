@@ -22,6 +22,7 @@ from utils import create_map
 from utils import create_video
 from utils import nan_filter
 from utils import nan_filter_1d
+from utils import write_info_file
 
 
 def velotafmap(input_dir, output_dir):
@@ -70,10 +71,6 @@ def velotafmap(input_dir, output_dir):
         os.makedirs(output_dir)
     if not os.path.exists(os.path.join(output_dir, "images")):
         os.makedirs(os.path.join(output_dir, "images"))
-
-    # write info file
-    info_file = os.path.join(output_dir, "info.txt")
-    shutil.copy(config_file, info_file)
 
     # store processing start time
     processing_start_time = datetime.datetime.now()
@@ -191,13 +188,9 @@ def velotafmap(input_dir, output_dir):
         VIDEO_FPS,
     )
 
-    # store processing duration
-    with open(info_file, "a") as outfile:
-        outfile.write(
-            "\nProcessing time: {}".format(
-                datetime.datetime.now() - processing_start_time
-            )
-        )
+    # write info file
+    info_file = os.path.join(output_dir, "info.txt")
+    write_info_file(info_file, config, processing_start_time)
 
 
 if __name__ == "__main__":

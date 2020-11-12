@@ -294,3 +294,46 @@ def nan_filter(array, sigma=1.0):
 
     # returned combined two filtered arrays
     return VV / WW
+
+
+def write_info_file(info_file, config, processing_start_time):
+    """
+    Write info on processing in an output text file.
+    Input:
+        -info_file              str
+        -config                 configparser.ConfigParser object
+        -processing_start_time  datetime.datetime object
+    """
+
+    # prepare info string
+    info_string = (
+        "These files were processed by velotafmap with the following parameters.\n"
+    )
+    info_string += "Pixel size (m): {}\n".format(config["velotafmap"]["pix_size"])
+    info_string += "Pixel number of decimals: {}\n".format(
+        config["velotafmap"]["pix_decimals"]
+    )
+    info_string += "Study start date: {}\n".format(config["velotafmap"]["start_date"])
+    info_string += "Study end date: {}\n".format(config["velotafmap"]["end_date"])
+    info_string += "Projection EPSG code: {}\n".format(
+        config["velotafmap"]["projection_epsg"]
+    )
+    info_string += "Spatial bounds (xmin, xmax, ymin, ymax): {}\n".format(
+        config["velotafmap"]["spatial_bounds"]
+    )
+    info_string += "Time 1D filter standard deviation: {}\n".format(
+        config["velotafmap"]["sigma_time_filter"]
+    )
+    info_string += "Spatial 2D filter standard deviation: {}\n".format(
+        config["velotafmap"]["sigma_spatial_filter"]
+    )
+    info_string += "Video fps: {}\n".format(config["velotafmap"]["video_fps"])
+    info_string += "Processing start date: {}\n".format(processing_start_time)
+    info_string += "Processing end date: {}\n".format(datetime.datetime.now())
+    info_string += "Processing time: {}\n".format(
+        datetime.datetime.now() - processing_start_time
+    )
+
+    # write to output file
+    with open(info_file, "w") as outfile:
+        outfile.write(info_string)
