@@ -223,7 +223,7 @@ def create_video(video_name, input_dir, fps=16):
     """
 
     # set FourCC video codec code
-    fourcc = cv2.VideoWriter_fourcc(*"XVID")
+    fourcc = cv2.VideoWriter_fourcc(*"H264")
 
     # get input images list
     images = [img for img in os.listdir(input_dir) if img.endswith(".png")]

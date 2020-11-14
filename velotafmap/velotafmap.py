@@ -184,7 +184,7 @@ def velotafmap(input_dir, output_dir):
 
     # create video file from images of whole timeframe
     create_video(
-        os.path.join(output_dir, "video.avi"),
+        os.path.join(output_dir, "video.mp4"),
         os.path.join(output_dir, "images"),
         VIDEO_FPS,
     )
