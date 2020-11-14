@@ -54,7 +54,8 @@ def velotafmap(input_dir, output_dir):
     DAYS = (END_DATE - START_DATE).days
 
     # spatial bounds
-    PROJECTION = ccrs.epsg(int(config["velotafmap"]["projection_epsg"]))
+    espg_code = int(config["velotafmap"]["projection_epsg"])
+    PROJECTION = ccrs.epsg(epsg_code)
     XMIN, XMAX, YMIN, YMAX = [
         int(value) for value in config["velotafmap"]["spatial_bounds"].split(",")
     ]
@@ -122,7 +123,7 @@ def velotafmap(input_dir, output_dir):
                 _,
                 _,
                 points,
-            ) = read_gpx(input_file)
+            ) = read_gpx(input_file, epsg_code)
 
         # store velocity data in dataset
         for index, point in points.iterrows():  # loop through points

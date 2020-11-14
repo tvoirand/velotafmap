@@ -61,11 +61,12 @@ def check_bike_commuting(input_file):
     return True
 
 
-def read_gpx(input_file):
+def read_gpx(input_file, epsg_code):
     """
     Read GPX files.
     Input:
         -input_file     str
+        -epsg_code      int
     Output:
         -activity_date  datetime.datetime object
         -activity_name  str
@@ -143,7 +144,7 @@ def read_gpx(input_file):
     )
 
     # get coordinates of points in meters (projected in EPSG 32630)
-    projected_coords = ccrs.epsg(32630).transform_points(
+    projected_coords = ccrs.epsg(epsg_code).transform_points(
         ccrs.PlateCarree(), np.asarray(points_df["lon"]), np.asarray(points_df["lat"])
     )
 
