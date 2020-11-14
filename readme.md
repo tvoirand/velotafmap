@@ -1,7 +1,7 @@
 # Velotafmap
 
 A script to draw maps and animations of my daily bike commuting activities,
-initially stored with Strava.
+initially recorded with Strava.
 
 The script reads Strava activities gpx files and computes velocity.
 The data points are rasterized, daily mean velocity is computed for each pixel,
