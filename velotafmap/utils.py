@@ -179,7 +179,7 @@ def create_map(array, output_file, projection):
     """
 
     # create figure
-    fig = plt.figure(figsize=(16, 12), dpi=300)
+    fig = plt.figure(figsize=(7, 6), dpi=300)
 
     # create geo axes
     geo_axes = plt.subplot(projection=projection)
