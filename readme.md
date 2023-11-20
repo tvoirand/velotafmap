@@ -35,3 +35,7 @@ Requires Python 3 with the following packages (listed in environment.yml):
 ## Usage
 
 *   Run the main script `velotafmap/velotafmap.py` using the corresponding environment and the `--input_dir` and `--output_dir` arguments.
+
+## Contribute
+
+Please feel free to contribute by opening issues or pull-requests!
